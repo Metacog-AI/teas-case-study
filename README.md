@@ -127,10 +127,10 @@ If you use these materials in your research, please cite:
 ## Contact
 
 **Abu Syed**  
-Founder & CEO, Metacog  
+Founder & CEO, Metacog (https://www.metacog.study/)
 Email: abu.syed@outlook.com  
 GitHub: [@Metacog-AI](https://github.com/Metacog-AI)
-https://www.metacog.study/
+
 
 ---
 
