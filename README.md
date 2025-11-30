@@ -1,4 +1,3 @@
-```markdown
 # TEAS Case Study: Validating Educational AI Trustworthiness
 
 **Paper:** *TEAS: Trusted Educational AI Standard - A Framework for Verifiable, Stable, Auditable, and Pedagogically Sound Learning Systems*  
@@ -140,4 +139,3 @@ https://www.metacog.study/
 This research was conducted as part of Metacog's AI research initiative. Evaluation performed using Claude Opus 4.5 (Anthropic). Source models: Qwen (Alibaba), R1 Distill (DeepSeek), GPT-OSS (OpenAI-compatible).
 
 For questions about the TEAS framework or reproducibility, please open an issue in this repository.
-```
