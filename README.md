@@ -1,6 +1,5 @@
 # TEAS Case Study: Validating Educational AI Trustworthiness
 
-[![Paper](https://img.shields.io/badge/Paper-AAAI%202026-blue)](paper/TEAS_Framework_AAAI_2026.pdf)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
 [![Data License](https://img.shields.io/badge/Data-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 
@@ -90,22 +89,20 @@ teas-case-study/
 │   ├── condition_b_grounded.txt     # Grounded prompt (document + KG)
 │   └── evaluator_prompt.txt         # Blind evaluation rubric
 ├── responses/
-│   ├── qwen3_8b_grounded/          # 5 JSON responses
-│   ├── r1_distill_14b/             # 5 JSON responses
-│   ├── qwen3_80b/                  # 5 JSON responses
-│   └── gpt_oss_120b/               # 5 JSON responses
+│   ├── qwen_8b_grounding/          
+│   ├── r1-distill-qwen-14b/             
+│   ├── qwen-80b/                  
+│   └── gpt-oss-120b/               
 ├── evaluations/
-│   ├── q1_evaluation.json          # Anonymized evaluation outputs
-│   ├── q2_evaluation.json
-│   ├── q3_evaluation.json
-│   ├── q4_evaluation.json
-│   ├── q5_evaluation.json
-│   └── anonymization_mapping.json  # De-anonymization key
+│   ├── q1_eval.md          # Anonymized evaluation outputs
+│   ├── q2_eval.md
+│   ├── q3_eval.md
+│   ├── q4_eval.md
+│   ├── q5_eval.md
 ├── results/
 │   ├── aggregate_scores.csv        # Detailed scores per question
-│   └── summary_statistics.csv      # Summary metrics and costs
 └── paper/
-    └── TEAS_Framework_AAAI_2026.pdf # Full paper
+    └── TEAS_Framework_AAAI-DAI_With Case Study_Final4_Abu Syed.pdf # Full paper
 ```
 
 ---
@@ -214,7 +211,7 @@ We do **not** accept pull requests that modify the original experimental data or
 ## 📧 Contact
 
 **Abu Syed**  
-Founder & CEO, Metacog (https://www.metacog.study/)
+Founder & CEO, [Metacog](https://www.metacog.study/)
 Student, Data Science and Applications, IIT Madras  
 Email: abu.syed@outlook.com  
 GitHub: [@Metacog-AI](https://github.com/Metacog-AI)
@@ -225,10 +222,9 @@ GitHub: [@Metacog-AI](https://github.com/Metacog-AI)
 
 This research was conducted as part of Metacog's AI research initiative to advance trustworthy educational AI systems. We thank:
 
+- **Review:** AAAI 2026 Deployable AI Workshop reviewers for supporting this work
 - **Evaluation:** Claude Opus 4.5 (Anthropic) for independent blind judging
 - **Models:** Qwen (Alibaba), R1 Distill (DeepSeek), GPT-OSS (OpenAI-compatible)
-- **Infrastructure:** Neo4j for knowledge graph storage
-- **Review:** AAAI 2026 Deployable AI Workshop reviewers
 
 ---
 
