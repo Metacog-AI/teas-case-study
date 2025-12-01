@@ -83,7 +83,10 @@ teas-case-study/
 │   ├── questions.json               # 5 evaluation questions with ground truth
 │   └── knowledge_graph/
 │       ├── node_export.csv          # 31 nodes (27 variables, 10 equations)
+│       ├── graph-export.csv          # Contains the KG
 │       └── relationship_export.csv  # 14 APPEARS_IN relationships
+
+
 ├── prompts/
 │   ├── condition_a_baseline.txt     # Baseline prompt (document-only)
 │   ├── condition_b_grounded.txt     # Grounded prompt (document + KG)
