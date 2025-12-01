@@ -1,0 +1,284 @@
+\documentclass[12pt, a4paper]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{fancyhdr}
+
+% Page formatting to simulate academic density
+\geometry{margin=1in}
+\onehalfspacing
+
+% Header settings
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Optimization Methods in Machine Learning}
+\lhead{Academic Draft}
+\cfoot{\thepage}
+
+% Theorem environments
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+
+\title{\textbf{Optimization Methods in Machine Learning:\\ From Gradient Descent to Adaptive Moment Estimation}}
+\author{Your Name \\ Department of Computer Science \\ University of LaTeX}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Optimization lies at the heart of modern machine learning, acting as the engine that translates data into model intelligence. This paper provides a comprehensive analysis of first-order optimization algorithms used to minimize empirical risk. We begin by establishing the mathematical foundations of convexity and smoothness. We then explore the evolution of gradient-based methods, moving from standard Gradient Descent (GD) to Stochastic Gradient Descent (SGD), and finally to advanced adaptive methods such as Adam. Special attention is paid to the convergence properties of these algorithms, specifically analyzing the impact of the Lipschitz constant and strong convexity parameters on the error bounds. We demonstrate how momentum terms and adaptive learning rates can overcome the limitations of static update rules in high-dimensional non-convex landscapes.
+\end{abstract}
+
+\newpage
+
+\section{Introduction}
+
+Machine learning problems are frequently cast as optimization problems where the goal is to find a set of parameters that minimize a scalar-valued objective function. Whether training a simple linear regression model or a deep neural network with billions of parameters, the fundamental mechanism involves iteratively adjusting weights to reduce prediction error.
+
+In this document, we explore the landscape of continuous optimization. We focus primarily on first-order methods, which utilize gradient information to guide the search for an optimal solution. As we traverse the hierarchy of algorithms, we will explicitly define the notation and variables required to understand the mechanics of learning.
+
+The paper is structured as follows: Section 2 establishes the mathematical preliminaries, defining the dataset, the loss function, and critical properties of the objective surface such as Lipschitz continuity. Section 3 introduces the workhorse of machine learning: Gradient Descent and its stochastic variants. Section 4 analyzes how historical gradient information can be leveraged via momentum and adaptive learning rates to accelerate convergence. Section 5 provides a rigorous convergence analysis, linking the properties defined in Section 2 to the algorithms defined in Sections 3 and 4. Finally, Section 6 concludes with a discussion on the gap between optimization and generalization.
+
+\newpage
+
+\section{Mathematical Preliminaries}
+
+Before deriving specific update rules, we must rigorously define the problem setting and the variables governing the optimization landscape.
+
+\subsection{Problem Formulation}
+
+We assume a supervised learning setting. Let the dataset be denoted by $\mathcal{D}$, consisting of $N$ pairs of inputs and targets. Specifically, we let $x_i$ represent the input feature vector for the $i$-th sample, and $y_i$ represent the corresponding label.
+
+The model is parameterized by a weight vector. We define this vector as $\theta \in \mathbb{R}^d$, where $d$ represents the dimensionality of the parameter space. The goal is to minimize a discrepancy between the model predictions and the true labels. We define the objective function (or loss function) $\mathcal{L}(\theta)$ as the average loss over the dataset.
+
+Let $\ell(x_i, y_i; \theta)$ be the per-sample loss function. The empirical risk $\mathcal{L}(\theta)$ is formally defined as:
+
+\begin{equation} \label{eq:empirical_risk}
+\mathcal{L}(\theta) = \frac{1}{N} \sum_{i=1}^{N} \ell(x_i, y_i; \theta)
+\end{equation}
+
+To perform optimization, we require the derivative of this loss with respect to the parameters. We denote the gradient of the loss function as $\nabla \mathcal{L}(\theta)$. This vector points in the direction of the steepest ascent of the loss surface. Consequently, $-\nabla \mathcal{L}(\theta)$ points in the direction of steepest descent.
+
+\subsection{Regularization}
+
+To prevent overfitting, it is common to add a penalty term to the objective function. Let $\lambda$ denote the regularization coefficient, a non-negative hyperparameter. We typically use the $L_2$ norm of the weight vector $\theta$. The regularized objective function becomes:
+
+\begin{equation} \label{eq:regularized_loss}
+\mathcal{J}(\theta) = \mathcal{L}(\theta) + \frac{\lambda}{2} \|\theta\|^2
+\end{equation}
+
+Throughout the remainder of this paper, unless specified otherwise, we will focus on minimizing $\mathcal{L}(\theta)$, assuming $\lambda=0$ for simplicity, though the derivations easily extend to the regularized case.
+
+\subsection{Curvature and Smoothness Definitions}
+
+The speed at which an optimizer converges depends heavily on the geometry of the loss function. We must define two critical constants that describe this geometry.
+
+First, we define the Lipschitz constant. Let $L > 0$ be the Lipschitz constant for the gradient of the loss function. This parameter quantifies the smoothness of the function; effectively, it bounds how fast the gradient can change. A function $\mathcal{L}$ has $L$-Lipschitz continuous gradients if for all $\theta_1, \theta_2 \in \mathbb{R}^d$:
+
+\begin{equation} \label{eq:lipschitz}
+\| \nabla \mathcal{L}(\theta_1) - \nabla \mathcal{L}(\theta_2) \| \le L \| \theta_1 - \theta_2 \|
+\end{equation}
+
+Second, we define the strong convexity parameter. Let $\mu > 0$ denote the strong convexity constant. This parameter provides a lower bound on the curvature of the function. If $\mathcal{L}$ is twice differentiable, this implies the smallest eigenvalue of the Hessian is at least $\mu$. Formally, a function is $\mu$-strongly convex if for all $\theta_1, \theta_2$:
+
+\begin{equation} \label{eq:strong_convexity}
+\mathcal{L}(\theta_2) \ge \mathcal{L}(\theta_1) + \nabla \mathcal{L}(\theta_1)^T (\theta_2 - \theta_1) + \frac{\mu}{2} \| \theta_2 - \theta_1 \|^2
+\end{equation}
+
+As we will see in Section 6, the ratio between $L$ and $\mu$ (the condition number) dictates the theoretical convergence speed of gradient descent.
+
+\newpage
+
+\section{Gradient Descent Methods}
+
+With the objective function $\mathcal{L}(\theta)$ and gradient $\nabla \mathcal{L}$ defined in the previous section, we can now formulate the iterative algorithms used to find the optimal parameters $\theta^*$.
+
+\subsection{Batch Gradient Descent}
+
+The most fundamental optimization algorithm is Gradient Descent. We introduce the iteration counter $t$, representing the discrete time step of the algorithm. We also define the learning rate $\eta$ (sometimes denoted as $\alpha$), which is a positive scalar determining the step size.
+
+In Batch Gradient Descent, we compute the gradient over the entire dataset $\mathcal{D}$ defined in Section 2. The update rule for the weight vector $\theta$ at iteration $t$ is:
+
+\begin{equation} \label{eq:gd_update}
+\theta_{t+1} = \theta_t - \eta \nabla \mathcal{L}(\theta_t)
+\end{equation}
+
+While theoretically sound, calculating $\nabla \mathcal{L}(\theta_t)$ requires summing over all $N$ samples in $\mathcal{D}$, which is computationally prohibitive for large datasets.
+
+\subsection{Stochastic Gradient Descent (SGD)}
+
+To address the computational bottleneck, we approximate the full gradient using a single sample or a subset of samples. Let $B$ denote the batch size. In standard SGD, $B=1$, while in Mini-batch SGD, $1 < B < N$.
+
+Let $\mathcal{B}_t$ be a random subset of indices from the dataset $\{1, \dots, N\}$ of size $B$ chosen at timestep $t$. We define the stochastic gradient estimate $g_t$ as:
+
+\begin{equation} \label{eq:stochastic_grad}
+g_t = \nabla_\theta \left( \frac{1}{B} \sum_{i \in \mathcal{B}_t} \ell(x_i, y_i; \theta_t) \right)
+\end{equation}
+
+The update rule for Mini-batch SGD substitutes the full gradient in Equation (\ref{eq:gd_update}) with the estimate $g_t$. Recall that $\eta$ is our learning rate. The update becomes:
+
+\begin{equation} \label{eq:sgd_update}
+\theta_{t+1} = \theta_t - \eta g_t
+\end{equation}
+
+Ideally, the stochastic gradient is an unbiased estimator of the true gradient, meaning $\mathbb{E}[g_t] = \nabla \mathcal{L}(\theta_t)$. However, the variance of this estimator introduces noise into the optimization trajectory. As we will discuss in Section 5, this noise prevents exact convergence unless the learning rate $\eta$ decays over time.
+
+\subsection{Relationship to Regularization}
+
+If we return to the regularized loss $\mathcal{J}(\theta)$ defined in Equation (\ref{eq:regularized_loss}), which included the parameter $\lambda$, the gradient update changes slightly. The gradient of the regularization term $\frac{\lambda}{2}\|\theta\|^2$ is simply $\lambda \theta$. Thus, the update rule incorporating weight decay is:
+
+\begin{equation} \label{eq:weight_decay_update}
+\theta_{t+1} = \theta_t - \eta \left( \nabla \mathcal{L}(\theta_t) + \lambda \theta_t \right) = (1 - \eta \lambda)\theta_t - \eta \nabla \mathcal{L}(\theta_t)
+\end{equation}
+
+This formulation explicitly shows how $\lambda$ acts to decay the weights at every step $t$, keeping the parameters bounded.
+
+\newpage
+
+\section{Momentum and Adaptive Methods}
+
+Standard SGD often struggles in areas where the surface curves much more steeply in one dimension than in another (common in local optima). To mitigate this, we introduce the concept of "momentum," which accumulates a velocity vector from past gradients.
+
+\subsection{SGD with Momentum}
+
+We define a new variable, the momentum vector $v_t$, which stores a moving average of past gradients. We also introduce a momentum coefficient $\beta \in [0, 1)$, which controls how much history is retained.
+
+Building on the stochastic gradient $g_t$ defined in Equation (\ref{eq:stochastic_grad}) and the parameters $\theta$ and $\eta$ from Section 3, the momentum update involves two steps. First, we update the velocity:
+
+\begin{equation} \label{eq:momentum_velocity}
+v_{t+1} = \beta v_t + \eta g_t
+\end{equation}
+
+Note that some formulations scale the gradient by $(1-\beta)$ rather than $\eta$. Using the formulation above, the parameter update is:
+
+\begin{equation} \label{eq:momentum_update}
+\theta_{t+1} = \theta_t - v_{t+1}
+\end{equation}
+
+This approach dampens oscillations. If the gradient $g_t$ changes direction frequently (as in a ravine), the terms in $v_t$ cancel out. If the direction is consistent, $v_t$ accelerates.
+
+\subsection{Adaptive Moment Estimation (Adam)}
+
+While momentum adapts the step direction, it uses a global learning rate $\eta$ for all parameters in $\theta$. Adaptive methods compute individual learning rates for different parameters. The most popular method is Adam.
+
+Adam maintains two history variables. We recall $v_t$ as the first moment estimate (mean of gradients), and we define a new variable $s_t$ as the second moment estimate (uncentered variance of gradients). We utilize two decay rates: $\beta_1$ for the first moment and $\beta_2$ for the second moment.
+
+At iteration $t$, we compute the raw moments based on the gradient $g_t$:
+
+\begin{align} \label{eq:adam_raw}
+v_t &= \beta_1 v_{t-1} + (1 - \beta_1) g_t \nonumber \\
+s_t &= \beta_2 s_{t-1} + (1 - \beta_2) g_t^2
+\end{align}
+
+Here, $g_t^2$ indicates the element-wise square of the gradient vector. Because $v_t$ and $s_t$ are initialized to 0, they are biased toward zero during the initial time steps. We compute bias-corrected estimates $\hat{v}_t$ and $\hat{s}_t$:
+
+\begin{equation} \label{eq:adam_bias_correction}
+\hat{v}_t = \frac{v_t}{1 - \beta_1^t}, \quad \hat{s}_t = \frac{s_t}{1 - \beta_2^t}
+\end{equation}
+
+Finally, we update the parameters $\theta$. We introduce a small scalar $\epsilon$ to prevent division by zero. Combining the learning rate $\eta$ with the adaptive moments:
+
+\begin{equation} \label{eq:adam_update}
+\theta_{t+1} = \theta_t - \eta \frac{\hat{v}_t}{\sqrt{\hat{s}_t} + \epsilon}
+\end{equation}
+
+This equation demonstrates the power of adaptive methods: parameters with large gradients (large $s_t$) have their effective learning rate reduced, while parameters with sparse, small gradients are scaled up.
+
+\newpage
+
+\section{Convergence Analysis}
+
+In this section, we analyze the theoretical convergence of Gradient Descent. We rely heavily on the Lipschitz constant $L$ and the strong convexity parameter $\mu$ defined in Section 2.
+
+\subsection{Setup and Assumptions}
+
+Let $\theta^*$ denote the global minimizer of the loss function $\mathcal{L}(\theta)$. Our goal is to bound the squared distance error $\|\theta_t - \theta^*\|^2$ as $t \rightarrow \infty$.
+
+We assume the standard Batch Gradient Descent update rule from Equation (\ref{eq:gd_update}): $\theta_{t+1} = \theta_t - \eta \nabla \mathcal{L}(\theta_t)$.
+
+\subsection{Convex Convergence (Lipschitz Smoothness)}
+
+First, we analyze the case where $\mathcal{L}$ is convex and $L$-smooth, but not necessarily strongly convex (i.e., $\mu = 0$).
+
+We begin by expanding the squared norm of the error at step $t+1$:
+
+\begin{align} \label{eq:error_expansion}
+\| \theta_{t+1} - \theta^* \|^2 &= \| \theta_t - \eta \nabla \mathcal{L}(\theta_t) - \theta^* \|^2 \nonumber \\
+&= \| \theta_t - \theta^* \|^2 - 2\eta \nabla \mathcal{L}(\theta_t)^T (\theta_t - \theta^*) + \eta^2 \| \nabla \mathcal{L}(\theta_t) \|^2
+\end{align}
+
+Using the properties of convexity and the Lipschitz smoothness condition (Eq \ref{eq:lipschitz}), one can derive that for a learning rate $\eta \le 1/L$, the objective values converge at a rate of $O(1/t)$. This is known as sublinear convergence.
+
+\subsection{Linear Convergence (Strong Convexity)}
+
+Now, consider the case where the function is $\mu$-strongly convex ($\mu > 0$). Recall from Equation (\ref{eq:strong_convexity}) that this implies a quadratic lower bound on the growth of the function.
+
+We can strengthen the bound on the error contraction. Substituting the strong convexity inequalities into the expansion in Equation (\ref{eq:error_expansion}), we can derive a contraction factor. Specifically, if we set the learning rate $\eta = \frac{1}{L}$ (or more optimally dependent on the condition number), the relationship between successive errors is:
+
+\begin{equation} \label{eq:linear_contraction}
+\| \theta_{t+1} - \theta^* \|^2 \le \left( 1 - \frac{\mu}{L} \right) \| \theta_t - \theta^* \|^2
+\end{equation}
+
+Let $\kappa = L/\mu$ be the condition number of the Hessian. The term $(1 - \mu/L)$ can be rewritten as $(1 - 1/\kappa)$. Since $\mu \le L$, this factor is strictly less than 1. Applying this inequality recursively over $t$ iterations yields:
+
+\begin{equation} \label{eq:convergence_rate}
+\| \theta_t - \theta^* \|^2 \le \left( 1 - \frac{\mu}{L} \right)^t \| \theta_0 - \theta^* \|^2
+\end{equation}
+
+This result represents **linear convergence** (in optimization terminology, confusingly, this refers to exponential decay of the error). It highlights the critical relationship between the geometry of the loss function and the optimization speed.
+
+\subsection{Implications for Adaptive Methods}
+
+Recall the Adam update in Equation (\ref{eq:adam_update}). While Adam generally converges faster empirically on non-convex problems (like neural networks), proving its convergence in the convex setting is subtle. In fact, for certain definitions of $\beta_1, \beta_2$, Adam can fail to converge even on convex problems.
+
+However, if the effective step size (scaled by $1/\sqrt{\hat{s}_t}$) is bounded appropriately, adaptive methods can be shown to enjoy convergence rates similar to SGD, specifically $O(1/\sqrt{t})$ for general convex functions, adapting to the local geometry defined by $L$.
+
+\newpage
+
+\section{Conclusion}
+
+This paper has reviewed the mathematical foundations and algorithmic developments in optimization for machine learning. We started by defining the empirical risk $\mathcal{L}(\theta)$ over a dataset $\mathcal{D}$ and explored the geometry of this landscape through the Lipschitz constant $L$ and strong convexity parameter $\mu$.
+
+We detailed the progression of algorithms from the fundamental Batch Gradient Descent to Stochastic Gradient Descent. By introducing the learning rate $\eta$ and the momentum vector $v_t$, we showed how modern optimizers navigate complex loss landscapes. The derivations of Adam further illustrated how tracking the second moment $s_t$ allows for parameter-specific adaptation.
+
+Our convergence analysis in Section 5 linked these variables together, demonstrating that the convergence rate depends critically on the condition number $L/\mu$. While theoretical guarantees are strongest for convex problems, these insights drive the design of heuristics used in deep learning.
+
+Future work in this field focuses on closing the gap between the optimization of the training loss and the generalization to unseen data. While we can drive $\nabla \mathcal{L} \to 0$ efficiently, ensuring that $\theta^*$ yields low error on test distributions remains the ultimate challenge of learning theory.
+
+\newpage
+
+\begin{thebibliography}{9}
+
+\bibitem{bishop}
+Bishop, C. M. (2006).
+\textit{Pattern Recognition and Machine Learning}.
+Springer.
+
+\bibitem{goodfellow}
+Goodfellow, I., Bengio, Y., \& Courville, A. (2016).
+\textit{Deep Learning}.
+MIT Press.
+
+\bibitem{kingma}
+Kingma, D. P., \& Ba, J. (2014).
+Adam: A Method for Stochastic Optimization.
+\textit{arXiv preprint arXiv:1412.6980}.
+
+\bibitem{nesterov}
+Nesterov, Y. (1983).
+A method for unconstrained convex minimization problem with the rate of convergence $O(1/k^2)$.
+\textit{Doklady AN SSSR}, 269(3), 543-547.
+
+\end{thebibliography}
+
+\end{document}

@@ -1,0 +1,66 @@
+{
+  "metadata": {
+    "domain": "Optimization Theory",
+    "difficulty": "Graduate Level (GATE-style)",
+    "source_document": "Foundations of Gradient-Based Optimization",
+    "total_questions": 5
+  },
+  "questions": [
+    {
+      "question_id": "Q1",
+      "question_text": "In the context of gradient descent, what does the symbol θ represent, and what is its domain?",
+      "topic": "Problem Formulation",
+      "ground_truth": {
+        "answer": "θ represents the parameter/weight vector of the model. Domain: θ ∈ ℝ^d, where d is the dimensionality of the parameter space.",
+        "source_section": "Section 2.1: Problem Formulation",
+        "key_equations": ["θ ∈ ℝ^d"]
+      }
+    },
+    {
+      "question_id": "Q2",
+      "question_text": "Write the update rule for Stochastic Gradient Descent. What is the role of the learning rate η?",
+      "topic": "SGD Update Rule",
+      "ground_truth": {
+        "answer": "Update rule: θ_{t+1} = θ_t - η g_t, where g_t is the stochastic gradient estimate. The learning rate η controls the step size in parameter updates.",
+        "source_section": "Section 3.2: Stochastic Gradient Descent",
+        "key_equations": ["θ_{t+1} = θ_t - η g_t"]
+      }
+    },
+    {
+      "question_id": "Q3",
+      "question_text": "What is the condition number κ, and how does it affect convergence rate?",
+      "topic": "Convergence Analysis",
+      "ground_truth": {
+        "answer": "The condition number κ = L/μ is the ratio of the Lipschitz constant to the strong convexity parameter. Larger κ leads to slower convergence, with rate (1 - 1/κ)^t.",
+        "source_section": "Section 5.2: Convergence Rate",
+        "key_equations": ["κ = L/μ", "(1 - 1/κ)^t"]
+      }
+    },
+    {
+      "question_id": "Q4",
+      "question_text": "Explain the difference between the first moment v_t and second moment s_t in Adam. Why is bias correction needed?",
+      "topic": "Adam Optimizer",
+      "ground_truth": {
+        "answer": "v_t is the exponential moving average of gradients (first moment), s_t is the exponential moving average of squared gradients (second moment). Bias correction is needed because both are initialized at zero, causing bias toward zero in early iterations.",
+        "source_section": "Section 4.2: Adam Algorithm",
+        "key_equations": [
+          "v_t = β₁v_{t-1} + (1-β₁)g_t",
+          "s_t = β₂s_{t-1} + (1-β₂)g_t²",
+          "v̂_t = v_t/(1-β₁^t)",
+          "ŝ_t = s_t/(1-β₂^t)"
+        ]
+      }
+    },
+    {
+      "question_id": "Q5",
+      "question_text": "If a function is L-smooth but not strongly convex (μ=0), what is the convergence rate of gradient descent?",
+      "topic": "Non-Strongly Convex Convergence",
+      "ground_truth": {
+        "answer": "For L-smooth but not strongly convex functions (μ=0), gradient descent converges at a sublinear rate of O(1/t) with step size η ≤ 1/L.",
+        "source_section": "Section 5.2: Convergence Without Strong Convexity",
+        "key_equations": ["O(1/t)", "η ≤ 1/L"]
+      }
+    }
+  ]
+}
+
